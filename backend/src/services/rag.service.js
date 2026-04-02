@@ -2,6 +2,7 @@ const VectorSearchService = require('./vector.service');
 const GroqService = require('./groq.service');
 const { getEmbeddingService } = require('./embedding.service');
 const DocumentRepository = require('../utils/documentRepository');
+const SearchOptimizer = require('../utils/searchOptimizer');
 const logger = require('../utils/logger');
 const config = require('../config/env');
 const { getCollection } = require('../config/db');
@@ -21,6 +22,7 @@ class RAGService {
     this.groq = new GroqService();
     this.embedding = getEmbeddingService();
     this.documentRepository = new DocumentRepository();
+    this.searchOptimizer = new SearchOptimizer();
   }
 
   /**
@@ -58,7 +60,10 @@ class RAGService {
       } else {
         retrievedDocs = await this.vectorSearch.search(queryEmbedding, {
           topK: options.topK || config.VECTOR_SEARCH_TOP_K,
-        });
+       
+
+      // Optimize results with SearchOptimizer
+      retrievedDocs = this.searchOptimizer.rankResults(retrievedDocs, userQuery); });
       }
 
       if (retrievedDocs.length === 0) {
