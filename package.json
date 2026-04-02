@@ -1,0 +1,28 @@
+{
+  "name": "ai-knowledge-copilot",
+  "version": "1.0.0",
+  "description": "Production-grade RAG system with MongoDB Atlas Vector Search",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shreyes-7/AI-Knowledge-Copilot.git"
+  },
+  "keywords": [
+    "rag",
+    "retrieval-augmented-generation",
+    "mongodb",
+    "vector-search",
+    "groq",
+    "embeddings",
+    "llm",
+    "generative-ai"
+  ],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}
