@@ -70,59 +70,83 @@ export default function ChatComponent() {
   };
 
   return (
-    <div className="flex flex-col h-full bg-white rounded-lg shadow">
-      {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-6 space-y-4">
+    <div className="glass-panel flex h-full flex-col overflow-hidden rounded-[2rem]">
+      <div className="border-b border-white/10 px-6 py-5">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">Conversation</p>
+            <h2 className="mt-2 text-2xl font-bold text-white">Ask your knowledge base</h2>
+            <p className="mt-1 text-sm text-[var(--text-soft)]">
+              Get detailed, source-grounded responses from your uploaded documents.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-right">
+            <div className="text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">Focus</div>
+            <div className="mt-1 text-sm font-semibold text-white">Explain, compare, summarize</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="thin-scrollbar flex-1 overflow-y-auto p-6">
         {messages.length === 0 && (
-          <div className="flex items-center justify-center h-full text-center">
-            <div>
-              <h2 className="text-2xl font-bold text-gray-800 mb-2">Welcome to AI Knowledge Copilot</h2>
-              <p className="text-gray-600">Start by uploading documents, then ask questions about them.</p>
+          <div className="flex h-full items-center justify-center text-center">
+            <div className="max-w-xl rounded-[1.75rem] border border-white/10 bg-white/5 px-8 py-10">
+              <div className="section-label mx-auto">Ready</div>
+              <h2 className="mt-4 text-3xl font-bold text-white">Turn your documents into a personal research desk</h2>
+              <p className="mt-3 leading-7 text-[var(--text-soft)]">
+                Upload PDFs, markdown, or notes, then ask direct or open-ended questions and let the
+                assistant synthesize grounded answers from your indexed content.
+              </p>
             </div>
           </div>
         )}
 
-        {messages.map((message) => (
-          <div
-            key={message.id}
-            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
-          >
+        <div className="space-y-5">
+          {messages.map((message) => (
             <div
-              className={`max-w-xs lg:max-w-md xl:max-w-lg px-4 py-2 rounded-lg ${
-                message.type === 'user'
-                  ? 'bg-blue-500 text-white'
-                  : 'bg-gray-200 text-gray-800'
-              }`}
+              key={message.id}
+              className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
             >
-              <p className="whitespace-pre-wrap">{message.content}</p>
+              <div
+                className={`max-w-xs rounded-[1.5rem] px-5 py-4 shadow-2xl lg:max-w-2xl xl:max-w-3xl ${
+                  message.type === 'user'
+                    ? 'border border-white/10 bg-gradient-to-br from-neutral-100 to-neutral-300 text-black'
+                    : 'border border-white/10 bg-slate-900/80 text-slate-100'
+                }`}
+              >
+                <div className="mb-2 text-[11px] font-semibold uppercase tracking-[0.18em] opacity-70">
+                  {message.type === 'user' ? 'You' : 'Assistant'}
+                </div>
+                <p className="whitespace-pre-wrap leading-7">{message.content}</p>
               {message.sources && message.sources.length > 0 && (
-                <div className="mt-2 text-sm border-t border-gray-400 pt-2">
-                  <p className="font-semibold">Sources:</p>
+                <div className="mt-4 border-t border-white/10 pt-3 text-sm">
+                  <p className="font-semibold text-white">Sources</p>
                   {message.sources.map((source, idx) => (
-                    <div key={idx} className="text-xs">
+                    <div key={idx} className="mt-1 text-xs text-[var(--text-soft)]">
                       • {source.source}
                     </div>
                   ))}
                 </div>
               )}
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
 
         {loading && (
           <div className="flex justify-start">
-            <div className="bg-gray-200 text-gray-800 px-4 py-2 rounded-lg">
+            <div className="rounded-[1.25rem] border border-white/10 bg-slate-900/80 px-4 py-3 text-gray-100">
               <div className="flex space-x-2">
-                <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce"></div>
-                <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce delay-100"></div>
-                <div className="w-2 h-2 bg-gray-600 rounded-full animate-bounce delay-200"></div>
+                <div className="h-2 w-2 animate-bounce rounded-full bg-neutral-200"></div>
+                <div className="h-2 w-2 animate-bounce rounded-full bg-neutral-200 delay-100"></div>
+                <div className="h-2 w-2 animate-bounce rounded-full bg-neutral-200 delay-200"></div>
               </div>
             </div>
           </div>
         )}
 
         {error && (
-          <div className="px-4 py-2 bg-red-100 text-red-700 rounded-lg">
+          <div className="status-error rounded-2xl px-4 py-3">
             Error: {error}
           </div>
         )}
@@ -130,21 +154,20 @@ export default function ChatComponent() {
         <div ref={messagesEndRef} />
       </div>
 
-      {/* Input */}
-      <div className="border-t border-gray-200 p-4">
+      <div className="border-t border-white/10 p-4 sm:p-5">
         <form onSubmit={handleSendMessage} className="flex gap-2">
           <input
             type="text"
             value={input}
             onChange={(e) => setInput(e.target.value)}
-            placeholder="Ask a question..."
+            placeholder="Ask for an explanation, summary, comparison, or walkthrough..."
             disabled={loading}
-            className="flex-1 px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="control flex-1 px-4 py-3"
           />
           <button
             type="submit"
             disabled={loading || !input.trim()}
-            className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="primary-button rounded-2xl px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
           >
             Send
           </button>

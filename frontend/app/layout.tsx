@@ -3,7 +3,7 @@ import './styles/globals.css';
 
 export const metadata: Metadata = {
   title: 'AI Knowledge Copilot',
-  description: 'Production-grade RAG system with MongoDB Atlas Vector Search',
+  description: 'A modern document-grounded assistant with dark, focused knowledge workflows',
 };
 
 export default function RootLayout({
@@ -13,7 +13,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body className="bg-light">
+      <body>
         {children}
       </body>
     </html>

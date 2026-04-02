@@ -59,10 +59,22 @@ export default function UploadComponent() {
   };
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Upload Documents</h2>
+    <div className="glass-panel rounded-[2rem] p-6 sm:p-8">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">Ingestion</p>
+          <h2 className="mt-2 text-3xl font-bold text-white">Upload documents</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-7 text-[var(--text-soft)]">
+            Feed the knowledge base with PDFs, notes, and markdown files. Larger uploads are supported,
+            and the first local embedding pass may take a little longer while the model cache warms up.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[var(--text-soft)]">
+          Max file size: <span className="font-semibold">100MB</span>
+        </div>
+      </div>
 
-      <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center hover:border-blue-500 transition">
+      <div className="rounded-[1.75rem] border border-dashed border-white/12 bg-slate-950/40 p-8 text-center transition hover:border-white/20 hover:bg-slate-900/60">
         <input
           type="file"
           multiple
@@ -73,21 +85,22 @@ export default function UploadComponent() {
           id="file-input"
         />
         <label htmlFor="file-input" className="cursor-pointer">
-          <div className="text-gray-600">
-            <p className="text-lg mb-2">📁 Click to select or drag files</p>
-            <p className="text-sm text-gray-500">Supported: PDF, TXT, Markdown</p>
-            <p className="text-sm text-gray-500">Max size: 100MB per file</p>
+          <div className="text-[var(--text-soft)]">
+            <p className="text-xl font-semibold text-white">Drop files here or click to browse</p>
+            <p className="mt-3 text-sm">Supported: PDF, TXT, Markdown</p>
+            <p className="mt-1 text-sm text-[var(--text-faint)]">High-volume uploads work best after the first local model download completes.</p>
           </div>
         </label>
       </div>
 
       {files.length > 0 && (
-        <div className="mt-4">
-          <h3 className="font-semibold mb-2">Selected Files:</h3>
+        <div className="mt-6 rounded-[1.5rem] border border-white/10 bg-white/5 p-5">
+          <h3 className="mb-3 font-semibold text-white">Selected files</h3>
           <ul className="space-y-1">
             {files.map((file, idx) => (
-              <li key={idx} className="text-sm text-gray-700">
-                ✓ {file.name} ({(file.size / 1024).toFixed(2)} KB)
+              <li key={idx} className="flex items-center justify-between gap-4 rounded-2xl border border-white/5 bg-slate-950/40 px-4 py-3 text-sm text-[var(--text-soft)]">
+                <span className="truncate">{file.name}</span>
+                <span className="shrink-0 text-[var(--text-faint)]">{(file.size / 1024).toFixed(2)} KB</span>
               </li>
             ))}
           </ul>
@@ -95,25 +108,25 @@ export default function UploadComponent() {
       )}
 
       {progress > 0 && (
-        <div className="mt-4">
-          <div className="bg-gray-200 rounded-full h-2 overflow-hidden">
+        <div className="mt-6">
+          <div className="h-2 overflow-hidden rounded-full bg-white/10">
             <div
-              className="bg-blue-500 h-full transition-all"
+              className="h-full bg-gradient-to-r from-neutral-200 to-neutral-500 transition-all"
               style={{ width: `${progress}%` }}
             ></div>
           </div>
-          <p className="text-sm text-gray-600 mt-2">{progress}% uploaded</p>
+          <p className="mt-2 text-sm text-[var(--text-soft)]">{progress}% uploaded</p>
         </div>
       )}
 
       {message && (
-        <div className="mt-4 p-3 bg-green-100 text-green-700 rounded-lg">
+        <div className="status-success mt-6 rounded-2xl p-4">
           {message}
         </div>
       )}
 
       {error && (
-        <div className="mt-4 p-3 bg-red-100 text-red-700 rounded-lg">
+        <div className="status-error mt-6 rounded-2xl p-4">
           {error}
         </div>
       )}
@@ -121,7 +134,7 @@ export default function UploadComponent() {
       <button
         onClick={handleUpload}
         disabled={uploading || files.length === 0}
-        className="mt-4 w-full px-6 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 disabled:opacity-50 disabled:cursor-not-allowed font-semibold"
+        className="primary-button mt-6 w-full rounded-2xl px-6 py-3 font-semibold disabled:cursor-not-allowed disabled:opacity-50"
       >
         {uploading ? 'Uploading...' : 'Upload Documents'}
       </button>

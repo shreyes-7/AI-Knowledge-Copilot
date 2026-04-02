@@ -60,52 +60,74 @@ export default function DocumentsComponent() {
   };
 
   if (loading) {
-    return <div className="text-center text-gray-600">Loading documents...</div>;
+    return <div className="py-20 text-center text-[var(--text-soft)]">Loading documents...</div>;
   }
 
   return (
-    <div className="bg-white rounded-lg shadow p-6">
-      <h2 className="text-2xl font-bold mb-4 text-gray-800">Documents</h2>
+    <div className="glass-panel rounded-[2rem] p-6 sm:p-8">
+      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs uppercase tracking-[0.18em] text-[var(--text-faint)]">Library</p>
+          <h2 className="mt-2 text-3xl font-bold text-white">Indexed documents</h2>
+          <p className="mt-2 text-sm leading-7 text-[var(--text-soft)]">
+            Review the chunks currently available to retrieval, inspect source material, and remove stale entries.
+          </p>
+        </div>
+        <div className="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm text-[var(--text-soft)]">
+          {total} indexed chunk{total === 1 ? '' : 's'}
+        </div>
+      </div>
 
       {error && (
-        <div className="p-3 bg-red-100 text-red-700 rounded-lg mb-4">{error}</div>
+        <div className="status-error mb-5 rounded-2xl p-4">{error}</div>
       )}
 
-      <div className="space-y-2">
+      <div className="space-y-3">
         {documents.map((doc) => (
-          <div key={doc._id} className="flex justify-between items-start p-3 bg-gray-50 rounded-lg">
-            <div>
-              <p className="font-semibold text-gray-800">{doc.metadata.source}</p>
-              <p className="text-sm text-gray-600 line-clamp-2">{doc.text}</p>
+          <div
+            key={doc._id}
+            className="rounded-[1.5rem] border border-white/10 bg-slate-950/45 p-5 transition hover:border-cyan-300/20 hover:bg-slate-900/65"
+          >
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <p className="font-semibold text-white">{doc.metadata.source}</p>
+                  <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1 text-[11px] uppercase tracking-[0.16em] text-[var(--text-faint)]">
+                    chunk {doc.metadata.chunk_index + 1}
+                  </span>
+                </div>
+                <p className="mt-3 text-sm leading-7 text-[var(--text-soft)] line-clamp-3">{doc.text}</p>
+              </div>
+
+              <button
+                onClick={() => handleDelete(doc._id)}
+                className="danger-button shrink-0 rounded-2xl px-4 py-2 text-sm font-semibold"
+              >
+                Delete
+              </button>
             </div>
-            <button
-              onClick={() => handleDelete(doc._id)}
-              className="px-3 py-1 bg-red-500 text-white text-sm rounded hover:bg-red-600"
-            >
-              Delete
-            </button>
           </div>
         ))}
       </div>
 
       {documents.length === 0 && (
-        <p className="text-center text-gray-500">No documents yet. Upload some to get started!</p>
+        <p className="py-10 text-center text-[var(--text-faint)]">No documents yet. Upload some to get started.</p>
       )}
 
       {total > 10 && (
-        <div className="mt-4 flex justify-center gap-2">
+        <div className="mt-6 flex justify-center gap-3">
           <button
             onClick={() => setPage(p => Math.max(1, p - 1))}
             disabled={page === 1}
-            className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+            className="secondary-button rounded-2xl px-4 py-2 disabled:opacity-50"
           >
             Previous
           </button>
-          <span className="px-4 py-2">Page {page}</span>
+          <span className="rounded-2xl border border-white/10 bg-white/5 px-4 py-2 text-[var(--text-soft)]">Page {page}</span>
           <button
             onClick={() => setPage(p => p + 1)}
             disabled={page * 10 >= total}
-            className="px-4 py-2 bg-blue-500 text-white rounded disabled:opacity-50"
+            className="secondary-button rounded-2xl px-4 py-2 disabled:opacity-50"
           >
             Next
           </button>
