@@ -7,7 +7,6 @@ interface Message {
   id: string;
   type: 'user' | 'assistant';
   content: string;
-  sources?: Array<{ source: string; docId: string }>;
   loading?: boolean;
 }
 
@@ -56,7 +55,6 @@ export default function ChatComponent() {
           id: (Date.now() + 1).toString(),
           type: 'assistant',
           content: response.data.answer,
-          sources: response.data.sources,
         };
         setMessages((prev) => [...prev, assistantMessage]);
       } else {
@@ -118,16 +116,6 @@ export default function ChatComponent() {
                   {message.type === 'user' ? 'You' : 'Assistant'}
                 </div>
                 <p className="whitespace-pre-wrap leading-7">{message.content}</p>
-              {message.sources && message.sources.length > 0 && (
-                <div className="mt-4 border-t border-white/10 pt-3 text-sm">
-                  <p className="font-semibold text-white">Sources</p>
-                  {message.sources.map((source, idx) => (
-                    <div key={idx} className="mt-1 text-xs text-[var(--text-soft)]">
-                      • {source.source}
-                    </div>
-                  ))}
-                </div>
-              )}
               </div>
             </div>
           ))}
