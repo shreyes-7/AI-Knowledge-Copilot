@@ -70,6 +70,8 @@ app.get('/', (req, res) => {
  */
 // TODO: Add routes
 app.use('/api/upload', require('./routes/upload.routes'));
+app.use('/api/chat', require('./routes/chat.routes'));
+app.use('/api/documents', require('./routes/document.routes'));
 
 /**
  * 404 handler
