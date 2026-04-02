@@ -58,7 +58,7 @@ module.exports = {
 
   // File Upload
   UPLOAD_DIR: process.env.UPLOAD_DIR || 'uploads',
-  MAX_FILE_SIZE_MB: parseInt(process.env.MAX_FILE_SIZE_MB) || 10,
+  MAX_FILE_SIZE_MB: parseInt(process.env.MAX_FILE_SIZE_MB) || 100,
   ALLOWED_FILE_TYPES: (process.env.ALLOWED_FILE_TYPES || 'pdf,txt,md').split(','),
 
   // Performance

@@ -76,7 +76,7 @@ export default function UploadComponent() {
           <div className="text-gray-600">
             <p className="text-lg mb-2">📁 Click to select or drag files</p>
             <p className="text-sm text-gray-500">Supported: PDF, TXT, Markdown</p>
-            <p className="text-sm text-gray-500">Max size: 10MB per file</p>
+            <p className="text-sm text-gray-500">Max size: 100MB per file</p>
           </div>
         </label>
       </div>
