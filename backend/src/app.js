@@ -4,6 +4,7 @@ const config = require('./config/env');
 const logger = require('./utils/logger');
 const { errorHandler } = require('./utils/errorHandler');
 const { connectDB } = require('./config/db');
+const { initializeDatabase } = require('./config/dbInit');
 
 // Validate environment variables
 config.checkEnvVariables();
@@ -83,8 +84,9 @@ app.use(errorHandler);
  */
 const startServer = async () => {
   try {
-    // Connect to database
+    // Connect to database and initialize
     await connectDB();
+    await initializeDatabase();
 
     // Start listening
     app.listen(config.PORT, () => {
