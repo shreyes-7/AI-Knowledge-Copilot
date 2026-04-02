@@ -1,5 +1,6 @@
 const express = require('express');
 const cors = require('cors');
+const fileUpload = require('express-fileupload');
 const config = require('./config/env');
 const logger = require('./utils/logger');
 const { errorHandler } = require('./utils/errorHandler');
@@ -26,6 +27,15 @@ app.use(express.json({
 app.use(express.urlencoded({
   limit: '50mb',
   extended: true,
+}));
+
+// File upload middleware
+app.use(fileUpload({
+  useTempFiles: true,
+  tempFileDir: config.UPLOAD_DIR,
+  safeFileNames: true,
+  preserveExtension: true,
+  limits: { fileSize: config.MAX_FILE_SIZE_MB * 1024 * 1024 },
 }));
 
 /**
@@ -59,6 +69,7 @@ app.get('/', (req, res) => {
  * Mount routes (will be added in next phases)
  */
 // TODO: Add routes
+app.use('/api/upload', require('./routes/upload.routes'));
 
 /**
  * 404 handler

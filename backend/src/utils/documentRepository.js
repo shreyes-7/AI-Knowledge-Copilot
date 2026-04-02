@@ -13,6 +13,13 @@ class DocumentRepository {
   }
 
   /**
+   * Get collection instance
+   */
+  getCollection() {
+    return getCollection(this.collectionName);
+  }
+
+  /**
    * Insert a single document
    */
   async insertOne(document) {
