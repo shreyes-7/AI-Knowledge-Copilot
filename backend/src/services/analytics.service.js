@@ -1,6 +1,6 @@
 const { getCollection } = require('../config/db');
 const config = require('../config/env');
-const logger = require('./logger');
+const logger = require('../utils/logger');
 
 /**
  * Analytics Service

@@ -52,8 +52,8 @@ module.exports = {
   GROQ_MAX_TOKENS: parseInt(process.env.GROQ_MAX_TOKENS) || 2048,
 
   // Embeddings
-  EMBEDDING_PROVIDER: process.env.EMBEDDING_PROVIDER || 'huggingface',
-  EMBEDDING_MODEL: process.env.EMBEDDING_MODEL || 'sentence-transformers/all-MiniLM-L6-v2',
+  EMBEDDING_PROVIDER: process.env.EMBEDDING_PROVIDER || 'local',
+  EMBEDDING_MODEL: process.env.EMBEDDING_MODEL || 'Xenova/all-MiniLM-L6-v2',
   EMBEDDING_DIMENSIONS: parseInt(process.env.EMBEDDING_DIMENSIONS) || 384,
 
   // File Upload

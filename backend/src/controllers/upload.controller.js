@@ -53,6 +53,8 @@ const uploadDocument = asyncHandler(async (req, res) => {
         const result = await pipeline.processFile(file.tempFilePath, {
           uploadedBy: req.body.userId || 'anonymous',
           uploadedAt: new Date(),
+          originalFileName: file.name,
+          originalFileType: fileExt,
         });
 
         results.push(result);

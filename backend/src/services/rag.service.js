@@ -60,11 +60,11 @@ class RAGService {
       } else {
         retrievedDocs = await this.vectorSearch.search(queryEmbedding, {
           topK: options.topK || config.VECTOR_SEARCH_TOP_K,
-       
+        });
+      }
 
       // Optimize results with SearchOptimizer
-      retrievedDocs = this.searchOptimizer.rankResults(retrievedDocs, userQuery); });
-      }
+      retrievedDocs = this.searchOptimizer.rankResults(retrievedDocs, userQuery);
 
       if (retrievedDocs.length === 0) {
         logger.warn('No documents retrieved for query');
@@ -141,7 +141,7 @@ class RAGService {
   /**
    * Build context string from retrieved documents
    */
-  buildContext(documents, maxContextLength = 3000) {
+  buildContext(documents, maxContextLength = 8000) {
     try {
       let context = '';
       let charCount = 0;

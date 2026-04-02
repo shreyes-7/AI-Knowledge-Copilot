@@ -1,7 +1,7 @@
 const TextExtractor = require('../utils/textExtractor');
 const TextChunker = require('../utils/chunker');
 const DocumentRepository = require('../utils/documentRepository');
-const { getEmbeddingService } = require('./embedding.service');
+const { getEmbeddingService } = require('../services/embedding.service');
 const logger = require('../utils/logger');
 const config = require('../config/env');
 const fs = require('fs').promises;
@@ -18,8 +18,8 @@ class IngestionPipeline {
   constructor() {
     this.textExtractor = new TextExtractor();
     this.textChunker = new TextChunker({
-      chunkSize: 500,
-      overlapSize: 100,
+      chunkSize: 800,
+      overlapSize: 160,
     });
     this.documentRepository = new DocumentRepository();
     this.embeddingService = getEmbeddingService();
@@ -36,8 +36,8 @@ class IngestionPipeline {
       });
 
       // Step 1: Extract text
-      const fileExtension = this.textExtractor.getFileExtension(filePath);
-      const fileName = this.textExtractor.getFileName(filePath);
+      const fileExtension = metadata.originalFileType || this.textExtractor.getFileExtension(filePath);
+      const fileName = metadata.originalFileName || this.textExtractor.getFileName(filePath);
       
       const text = await this.textExtractor.extractText(filePath, fileExtension);
 

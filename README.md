@@ -6,7 +6,7 @@ A **production-grade Retrieval-Augmented Generation (RAG) system** combining adv
 
 ✅ **MongoDB Atlas Vector Search** - Semantic search with native vector indexing  
 ✅ **Groq LLM Integration** - Ultra-fast LLM inference (70B model)  
-✅ **HuggingFace Embeddings** - State-of-the-art text embeddings (384-dim)  
+✅ **Local Embeddings** - On-device embeddings with `Xenova/all-MiniLM-L6-v2` (384-dim)  
 ✅ **Hybrid Search** - Vector + keyword search with RRF ranking  
 ✅ **Document Ingestion Pipeline** - PDF, TXT, Markdown support with intelligent chunking  
 ✅ **Comprehensive Analytics** - Query tracking, performance metrics, user activity  
@@ -28,7 +28,7 @@ User → Frontend (Next.js) → API (Express) → Services Layer
      (Vector + Keyword with RRF)              (Vector Index)
             ↑                                        ↑
      Embeddings                               Chunked Documents
-     (HuggingFace)                            (with Embeddings)
+     (Local Model)                            (with Embeddings)
             ↑
      Text Input
 ```
@@ -38,13 +38,13 @@ User → Frontend (Next.js) → API (Express) → Services Layer
 #### **Ingestion Pipeline**
 1. **Upload Document** → Validate file type & size
 2. **Extract Text** → Support PDF, TXT, Markdown
-3. **Chunk Text** → 500 tokens with 100-token overlap
-4. **Generate Embeddings** → HuggingFace (384-dim vectors)
+3. **Chunk Text** → 800 tokens with 160-token overlap
+4. **Generate Embeddings** → Local transformers model (384-dim vectors)
 5. **Store in MongoDB** → Vector index + metadata
 
 #### **Query Processing (RAG)**
-1. **Convert Query** → Query embedding (HuggingFace)
-2. **Vector Search** → Top-5 semantic matches (MongoDB Vector Index)
+1. **Convert Query** → Query embedding (local model)
+2. **Vector Search** → Top-8 semantic matches (MongoDB Atlas Vector Search)
 3. **Keyword Search** → Full-text keyword matches (optional)
 4. **RRF Fusion** → Combine results using Reciprocal Rank Fusion
 5. **Optimize Results** → Time decay, diversity, boosting
@@ -64,7 +64,7 @@ AI-Knowledge-Copilot/
 │   │   │   ├── dbInit.js            # Index & collection setup
 │   │   │   └── hybridSearchConfig.js # Search tuning parameters
 │   │   ├── services/
-│   │   │   ├── embedding.service.js # HuggingFace embeddings
+│   │   │   ├── embedding.service.js # Local embedding generation
 │   │   │   ├── vector.service.js    # Vector/keyword/hybrid search
 │   │   │   ├── groq.service.js      # Groq LLM integration
 │   │   │   ├── rag.service.js       # Main RAG pipeline
@@ -121,7 +121,7 @@ AI-Knowledge-Copilot/
 - **Node.js 18+**
 - **MongoDB Atlas** account with Vector Search enabled
 - **Groq API Key** (get free from https://console.groq.com)
-- **HuggingFace API Key** (get free from https://huggingface.co/settings/tokens)
+- **Enough local disk space** for the first embedding-model download and cache
 
 ### 1. Clone & Setup
 
@@ -160,9 +160,10 @@ MONGODB_DB_NAME=rag_db
 GROQ_API_KEY=your_groq_api_key_here
 GROQ_MODEL=llama-3.3-70b-versatile
 
-# HuggingFace
-HUGGINGFACE_API_KEY=your_huggingface_api_key_here
-EMBEDDING_MODEL=sentence-transformers/all-MiniLM-L6-v2
+# Embeddings (local)
+EMBEDDING_PROVIDER=local
+EMBEDDING_MODEL=Xenova/all-MiniLM-L6-v2
+EMBEDDING_DIMENSIONS=384
 
 # Features
 ENABLE_HYBRID_SEARCH=true
@@ -320,9 +321,9 @@ curl http://localhost:5000/api/analytics/users?days=7
 
 ### Embedding Configuration
 
-- **Model:** sentence-transformers/all-MiniLM-L6-v2
+- **Model:** Xenova/all-MiniLM-L6-v2
 - **Dimensions:** 384
-- **Provider:** HuggingFace Inference API
+- **Provider:** Local transformers.js runtime
 
 ### LLM Configuration
 
@@ -333,15 +334,15 @@ curl http://localhost:5000/api/analytics/users?days=7
 
 ### Chunking Strategy
 
-- **Chunk Size:** 500 tokens (~2000 chars)
-- **Overlap:** 100 tokens (~400 chars)
+- **Chunk Size:** 800 tokens (~3200 chars)
+- **Overlap:** 160 tokens (~640 chars)
 - **Boundary Breaking:** Sentences/paragraphs preferred
 
 ### Vector Search
 
 - **Index Type:** MongoDB Atlas Vector Search
 - **Similarity:** Cosine
-- **Top-K:** 5 documents (configurable)
+- **Top-K:** 8 documents (configurable)
 - **Candidates:** 100 (candidates evaluated before top-k)
 
 ### Hybrid Search
@@ -367,7 +368,7 @@ Where:
 ```javascript
 // In hybridSearchConfig.js
 vector: {
-  topK: 5,           // Number of results
+  topK: 8,           // Number of results
   candidates: 100,   // Candidates to evaluate (higher = accurate but slower)
   weight: 0.7        // Weight in RRF fusion
 }
@@ -378,8 +379,8 @@ vector: {
 ```javascript
 // In TextChunker constructor
 {
-  chunkSize: 500,     // Tokens per chunk (larger = more context, slower search)
-  overlapSize: 100    // Overlap tokens (more = better continuity)
+  chunkSize: 800,     // Tokens per chunk (larger = more context, slower search)
+  overlapSize: 160    // Overlap tokens (more = better continuity)
 }
 ```
 
@@ -435,7 +436,8 @@ CMD ["npm", "start"]
 ```bash
 NODE_ENV=production
 GROQ_API_KEY=xxx
-HUGGINGFACE_API_KEY=xxx
+EMBEDDING_PROVIDER=local
+EMBEDDING_MODEL=Xenova/all-MiniLM-L6-v2
 MONGODB_URI=mongodb+srv://user:pass@prod-cluster.mongodb.net/?retryWrites=true&w=majority
 ENABLE_CACHE=true
 CACHE_TTL=600
@@ -447,6 +449,7 @@ CACHE_TTL=600
 2. **Enable Vector Search** - Required feature
 3. **Create Vector Index** - Dimensions: 384, Similarity: cosine
 4. **Create Keyword Index** - For hybrid search (optional)
+5. **Run one upload/query locally** - This downloads the local embedding model into `backend/.cache/transformers`
 
 ### Recommended Indexes
 
@@ -500,7 +503,7 @@ curl -X POST http://localhost:5000/api/chat \
 ### Example 2: Upload & Query
 
 ```bash
-# Step 1: Upload document
+# Step 1: Upload document (up to 100MB per file)
 curl -X POST http://localhost:5000/api/upload \
   -F "file=@research_paper.pdf"
 
@@ -530,7 +533,7 @@ curl -X POST http://localhost:5000/api/chat/search \
 ## 🔐 Security Considerations
 
 - ✅ **Never commit .env files** - Use .env.example as template
-- ✅ **API key rotation** - Regularly update Groq & HuggingFace keys
+- ✅ **API key rotation** - Regularly update Groq keys and database credentials
 - ✅ **HTTPS in production** - Use SSL/TLS certificates
 - ✅ **Rate limiting** - Implement API rate limits (future)
 - ✅ **Authentication** - Add user auth for multi-user deployment
@@ -561,8 +564,8 @@ MIT License - See LICENSE file for details
 
 ### Hybrid Search
 
-1. **Vector Search** - Get 5 semantic matches
-2. **Keyword Search** - Get 5 keyword matches
+1. **Vector Search** - Get 8 semantic matches
+2. **Keyword Search** - Get keyword matches from Atlas Search
 3. **RRF Ranking** - Combine using reciprocal rank fusion
 4. **Re-ranking** - Apply time decay, diversity, boosting
 
@@ -593,7 +596,7 @@ MIT License - See LICENSE file for details
 
 - [MongoDB Vector Search](https://docs.atlas.mongodb.com/atlas-vector-search/)
 - [Groq API Docs](https://console.groq.com/docs)
-- [HuggingFace Transformers](https://huggingface.co/docs/transformers)
+- [Transformers.js](https://huggingface.co/docs/transformers.js)
 - [Reciprocal Rank Fusion](https://en.wikipedia.org/wiki/Reciprocal_rank_fusion)
 
 ---

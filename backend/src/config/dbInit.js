@@ -1,6 +1,6 @@
-const { connectDB, getCollection } = require('./config/db');
-const config = require('./config/env');
-const logger = require('./utils/logger');
+const { connectDB, getCollection } = require('./db');
+const config = require('./env');
+const logger = require('../utils/logger');
 
 /**
  * Initialize MongoDB collections and indexes
@@ -18,33 +18,42 @@ const initializeDatabase = async () => {
     logger.info('Creating vector search index...');
     try {
       await db.command({
-        createSearchIndex: {
-          collection: config.MONGODB_COLLECTION_NAME,
-          definition: {
-            mappings: {
-              dynamic: true,
-              fields: {
-                embedding: {
-                  type: 'vector',
-                  dimensions: config.EMBEDDING_DIMENSIONS,
-                  similarity: 'cosine',
-                },
-                text: {
-                  type: 'string',
-                },
-                'metadata.source': {
-                  type: 'string',
+        createSearchIndexes: config.MONGODB_COLLECTION_NAME,
+        indexes: [
+          {
+            name: config.MONGODB_VECTOR_INDEX,
+            definition: {
+              mappings: {
+                dynamic: true,
+                fields: {
+                  embedding: {
+                    type: 'knnVector',
+                    dimensions: config.EMBEDDING_DIMENSIONS,
+                    similarity: 'cosine',
+                  },
+                  text: {
+                    type: 'string',
+                  },
+                  'metadata.source': {
+                    type: 'string',
+                  },
                 },
               },
             },
           },
-          name: config.MONGODB_VECTOR_INDEX,
-        },
+        ],
       });
       logger.info('Vector search index created successfully');
     } catch (error) {
-      if (error.message.includes('index already exists')) {
+      if (
+        error.message.includes('already exists') ||
+        error.message.includes('Index already exists')
+      ) {
         logger.info('Vector search index already exists');
+      } else if (error.message.includes('command not found')) {
+        logger.warn('Search index command unavailable, create the vector index in Atlas UI', {
+          indexName: config.MONGODB_VECTOR_INDEX,
+        });
       } else {
         throw error;
       }
@@ -55,26 +64,35 @@ const initializeDatabase = async () => {
       logger.info('Creating keyword search index...');
       try {
         await db.command({
-          createSearchIndex: {
-            collection: config.MONGODB_COLLECTION_NAME,
-            definition: {
-              mappings: {
-                dynamic: true,
-                fields: {
-                  text: {
-                    type: 'string',
-                    analyzer: 'lucene.standard',
+          createSearchIndexes: config.MONGODB_COLLECTION_NAME,
+          indexes: [
+            {
+              name: config.KEYWORD_INDEX_NAME,
+              definition: {
+                mappings: {
+                  dynamic: true,
+                  fields: {
+                    text: {
+                      type: 'string',
+                      analyzer: 'lucene.standard',
+                    },
                   },
                 },
               },
             },
-            name: config.KEYWORD_INDEX_NAME,
-          },
+          ],
         });
         logger.info('Keyword search index created successfully');
       } catch (error) {
-        if (error.message.includes('index already exists')) {
+        if (
+          error.message.includes('already exists') ||
+          error.message.includes('Index already exists')
+        ) {
           logger.info('Keyword search index already exists');
+        } else if (error.message.includes('command not found')) {
+          logger.warn('Search index command unavailable, create the keyword index in Atlas UI', {
+            indexName: config.KEYWORD_INDEX_NAME,
+          });
         } else {
           throw error;
         }

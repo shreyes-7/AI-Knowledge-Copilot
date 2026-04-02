@@ -39,11 +39,12 @@ class VectorSearchService {
       const results = await collection
         .aggregate([
           {
-            $search: {
+            $vectorSearch: {
               index: this.indexName,
-              cosmosSearch: false, // MongoDB Atlas doesn't use cosinesearch
-              'vector': embedding,
-              'k': topK,
+              path: 'embedding',
+              queryVector: embedding,
+              numCandidates: candidates,
+              limit: topK,
             },
           },
           {
@@ -51,10 +52,6 @@ class VectorSearchService {
               _id: 1,
               text: 1,
               embedding: 1,
-              'metadata.source': 1,
-              'metadata.doc_id': 1,
-              'metadata.chunk_index': 1,
-              'metadata.file_type': 1,
               metadata: 1,
               score: { $meta: 'searchScore' },
             },
@@ -125,17 +122,27 @@ class VectorSearchService {
       const topK = options.topK || this.topK;
 
       const results = await collection
-        .find({
-          $text: { $search: query },
-        })
-        .project({
-          score: { $meta: 'textScore' },
-          text: 1,
-          embedding: 1,
-          metadata: 1,
-        })
-        .sort({ score: { $meta: 'textScore' } })
-        .limit(topK * 2) // Get more results for RRF
+        .aggregate([
+          {
+            $search: {
+              index: config.KEYWORD_INDEX_NAME,
+              text: {
+                query,
+                path: 'text',
+              },
+            },
+          },
+          {
+            $project: {
+              _id: 1,
+              text: 1,
+              embedding: 1,
+              metadata: 1,
+              score: { $meta: 'searchScore' },
+            },
+          },
+          { $limit: topK * 2 },
+        ])
         .toArray();
 
       logger.info('Keyword search completed', { resultCount: results.length });
@@ -239,14 +246,15 @@ class VectorSearchService {
       const results = await collection
         .aggregate([
           {
-            $search: {
+            $vectorSearch: {
               index: this.indexName,
-              'vector': embedding,
-              'k': topK,
-              'filter': Object.keys(filterQuery).length > 0 ? filterQuery : undefined,
+              path: 'embedding',
+              queryVector: embedding,
+              numCandidates: options.candidates || this.candidates,
+              limit: topK,
+              ...(Object.keys(filterQuery).length > 0 ? { filter: filterQuery } : {}),
             },
           },
-          ...(Object.keys(filterQuery).length > 0 ? [{ $match: filterQuery }] : []),
           {
             $project: {
               _id: 1,

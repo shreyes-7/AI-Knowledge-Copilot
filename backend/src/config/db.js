@@ -20,7 +20,7 @@ const connectDB = async () => {
     dbClient = new MongoClient(config.MONGODB_URI, {
       serverApi: {
         version: ServerApiVersion.v1,
-        strict: true,
+        strict: false,
         deprecationErrors: true,
       },
       maxPoolSize: 50,

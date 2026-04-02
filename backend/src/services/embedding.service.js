@@ -1,23 +1,36 @@
-const axios = require('axios');
+const path = require('path');
+const { pipeline, env } = require('@xenova/transformers');
 const config = require('../config/env');
 const logger = require('../utils/logger');
 
 /**
- * HuggingFace Embedding Service
- * Generates vector embeddings using HuggingFace Inference API
+ * Local Embedding Service
+ * Generates embeddings locally using transformers.js.
+ * The model is downloaded on first use and then reused from cache.
  */
 class EmbeddingService {
   constructor() {
     this.provider = config.EMBEDDING_PROVIDER;
     this.model = config.EMBEDDING_MODEL;
     this.dimensions = config.EMBEDDING_DIMENSIONS;
-    this.apiKey = process.env.HUGGINGFACE_API_KEY;
-    this.apiUrl = 'https://api-inference.huggingface.co/models';
-    this.timeout = config.REQUEST_TIMEOUT_MS;
+    this.extractorPromise = null;
 
-    if (!this.apiKey && this.provider === 'huggingface') {
-      logger.warn('HUGGINGFACE_API_KEY not set, embeddings may fail');
+    env.allowLocalModels = true;
+    env.cacheDir = path.join(process.cwd(), '.cache', 'transformers');
+  }
+
+  async getExtractor() {
+    if (!this.extractorPromise) {
+      logger.info('Loading local embedding model', {
+        provider: this.provider,
+        model: this.model,
+        cacheDir: env.cacheDir,
+      });
+
+      this.extractorPromise = pipeline('feature-extraction', this.model);
     }
+
+    return this.extractorPromise;
   }
 
   /**
@@ -32,24 +45,13 @@ class EmbeddingService {
     try {
       logger.debug('Generating embedding for text', { textLength: text.length });
 
-      const response = await axios.post(
-        `${this.apiUrl}/${this.model}`,
-        { inputs: text.substring(0, 512) }, // Limit to 512 chars for API
-        {
-          headers: {
-            Authorization: `Bearer ${this.apiKey}`,
-          },
-          timeout: this.timeout,
-        }
-      );
+      const extractor = await this.getExtractor();
+      const output = await extractor(text.substring(0, 2048), {
+        pooling: 'mean',
+        normalize: true,
+      });
+      const embedding = Array.from(output.data);
 
-      // HuggingFace returns array of arrays, we need the first one
-      let embedding = response.data;
-      if (Array.isArray(response.data) && response.data.length > 0) {
-        embedding = response.data[0];
-      }
-
-      // Validate embedding dimensions
       if (!Array.isArray(embedding) || embedding.length !== this.dimensions) {
         throw new Error(
           `Invalid embedding dimensions: expected ${this.dimensions}, got ${embedding.length}`
@@ -78,9 +80,11 @@ class EmbeddingService {
     try {
       logger.info('Generating embeddings for batch', { count: texts.length });
 
-      const embeddings = await Promise.all(
-        texts.map(text => this.generateEmbedding(text))
-      );
+      // Run sequentially to keep local inference memory and CPU usage stable.
+      const embeddings = [];
+      for (const text of texts) {
+        embeddings.push(await this.generateEmbedding(text));
+      }
 
       logger.info('Batch embedding generation completed', { count: texts.length });
       return embeddings;
@@ -124,7 +128,6 @@ class EmbeddingService {
   }
 }
 
-// Singleton instance
 let embeddingService = null;
 
 const getEmbeddingService = () => {
